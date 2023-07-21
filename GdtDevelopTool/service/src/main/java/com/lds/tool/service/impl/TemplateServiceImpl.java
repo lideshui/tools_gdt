@@ -199,7 +199,7 @@ public class TemplateServiceImpl implements TemplateService {
         String[] words = tableName.split("[_\\s]+");
         String packageSuffix = "";
         // 如果第一个单词是以两个字母加下划线开头的形式，则取第二个单词作为首个单词
-        if (words.length > 1 && words[0].length() == 2 && words[0].charAt(1) == '_') {
+        if (words.length > 1 && words[0].length() == 2) {
             packageSuffix =  words[1];
         } else {
             packageSuffix =  words[0];

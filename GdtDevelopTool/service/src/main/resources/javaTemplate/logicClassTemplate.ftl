@@ -1,31 +1,3 @@
-<#--<#if package?has_content>-->
-<#--package ${package};-->
-<#--</#if>-->
-
-<#--<#list imports as imp>-->
-<#--    //12非常丰富-->
-<#--    /**-->
-<#--    * @Author-->
-<#--    *-->
-<#--    */-->
-<#--import ${imp};-->
-<#--</#list>-->
-
-<#--public class ${className} {-->
-
-<#--private void(String name){-->
-<#--return "";-->
-<#--}-->
-<#--<#list fields as field>-->
-<#--    ${field}-->
-<#--</#list>-->
-
-<#--<#list methods as method>-->
-<#--    ${method}-->
-<#--</#list>-->
-<#--}-->
-
-
 package ${package};
 
 import java.time.LocalDateTime;
@@ -66,6 +38,8 @@ public class ${className} extends DataServiceTemplateJavaParse {
     public void defaultMethod(BackEndDataBean backEndDataBean, IConfigData configData, ResponseResult result,
                               QueryBean queryBean, IBaseDao baseDao, IBaseDao pfDao) {
     }
+    <#list checkedList as checked>
+    <#if checked == '新增方法'>
 
 
     /**
@@ -87,8 +61,6 @@ public class ${className} extends DataServiceTemplateJavaParse {
         result.setFormatType(FormatType.MESSAGE);
         result.setMessage(JSON.toJSONString(resultJson));
     }
-    <#list checkedList as checked>
-    <#if checked == '新增方法'>
 
 
     /**
@@ -96,17 +68,19 @@ public class ${className} extends DataServiceTemplateJavaParse {
      * @Author ${author}
      * @Version ${version}
      * @Date ${date}
-     * @return 返回新增数据的提示信息
+     * @return 返回操作数据库是否成功的提示信息
      */
     private JSONObject insertMethod(QueryBean queryBean, IBaseDao baseDao, IBaseDao pfDao){
         // 定义数据库新增是否成功提示信息对象
         JSONObject resultJson = new JSONObject();
 
-        // 获取系统参数
+        // 获取当前登陆用户的信息参数
         String other_id = queryBean.getArgValue("other_id"); //当前登录人id
         String other_user_name = queryBean.getArgValue("other_user_name"); //当前登录人名称
-        String other_busorg_id = queryBean.getArgValue("other_busorg_id"); //当前登录人单位id
-        String other_orgname = queryBean.getArgValue("other_orgname"); //当前登录人单位名称
+        String other_unit_id = queryBean.getArgValue("other_unit_id"); //当前登录人单位id
+        String other_unit_name = queryBean.getArgValue("other_unit_name"); //当前登录人单位名称
+        String other_dept_id = queryBean.getArgValue("other_dept_id"); //当前登录人部门id
+        String other_dept_name = queryBean.getArgValue("other_dept_name"); //当前登录人部门名称
 
         // 获取业务参数
         // 请求参数
@@ -128,13 +102,13 @@ public class ${className} extends DataServiceTemplateJavaParse {
         <#elseif field.name == 'pub_create_time'>
         String ${field.name} = this.getCurrDate(); //${field.remark!''}
         <#elseif field.name == 'pub_create_comp'>
-        String ${field.name} = other_busorg_id; //${field.remark!''}
+        String ${field.name} = other_unit_id; //${field.remark!''}
         <#elseif field.name == 'pub_comp_name'>
-        String ${field.name} = other_orgname; //${field.remark!''}
+        String ${field.name} = other_unit_name; //${field.remark!''}
         <#elseif field.name == 'pub_create_dept_id'>
-        String ${field.name} = ""; //${field.remark!''}
+        String ${field.name} = other_dept_id; //${field.remark!''}
         <#elseif field.name == 'pub_create_dept_name'>
-        String ${field.name} = ""; //${field.remark!''}
+        String ${field.name} = other_dept_name; //${field.remark!''}
         <#elseif field.name == 'pub_modified_id'>
         String ${field.name} = other_id; //${field.remark!''}
         <#elseif field.name == 'pub_modified_name'>
@@ -149,11 +123,11 @@ public class ${className} extends DataServiceTemplateJavaParse {
         <#elseif field.name == 'pub_creater_time'>
         String ${field.name} = this.getCurrDate(); //${field.remark!''}
         <#elseif field.name == 'pub_creater_comp'>
-        String ${field.name} = other_busorg_id; //${field.remark!''}
+        String ${field.name} = other_unit_name; //${field.remark!''}
         <#elseif field.name == 'pub_creater_dept_id'>
-        String ${field.name} = ""; //${field.remark!''}
+        String ${field.name} = other_dept_id; //${field.remark!''}
         <#elseif field.name == 'pub_creater_dept_name'>
-        String ${field.name} = ""; //${field.remark!''}
+        String ${field.name} = other_dept_name; //${field.remark!''}
         </#if>
         <#--是否删除属性-->
         <#elseif field.is_del == '0'>
@@ -236,7 +210,7 @@ public class ${className} extends DataServiceTemplateJavaParse {
      * @Author ${author}
      * @Version ${version}
      * @Datte ${date}
-     * @return 返回分页列表数据
+     * @return 操作数据库执行查询操作，直接返回分页查询结果到响应对象
      */
     public void selectPageList(QueryBean queryBean, IBaseDao baseDao, IBaseDao pfDao, ResponseResult result) {
         // 定义分页查询结果对象
@@ -244,22 +218,25 @@ public class ${className} extends DataServiceTemplateJavaParse {
 
         // 获取查询条件参数
         List<Object> paramList = new ArrayList<>();
+        <#--只要是日期类型，并且不为公共参数，就接收开始时间和结束时间的参数-->
         <#list fields as field>
-        <#if field.type?contains("DATE")>
+        <#if field.type?contains("DATE") && field.is_pub == "1">
         String ${field.name!''}_start = queryBean.getArgValue("${field.name!''}_start"); //${field.remark!''}开始时间
         String ${field.name!''}_end = queryBean.getArgValue("${field.name!''}_end"); //${field.remark!''}结束时间
         </#if>
         </#list>
+        <#--接收普通参数的查询条件参数-->
         <#list fields as field>
         <#if field.is_key == "1" && field.is_del == "1" && field.is_pub == "1" && !field.type?contains("DATE")>
         String ${field.name!''} = queryBean.getArgValue("${field.name!''}"); //${field.remark!''}
         </#if>
         </#list>
-        <#list fields as field>
-        <#if field.is_key == "1" && field.is_del == "1" && field.is_pub == "0" && !field.type?contains("DATE")>
-        String ${field.name!''} = queryBean.getArgValue("${field.name!''}"); //${field.remark!''}
-        </#if>
-        </#list>
+        <#--接收公共参数的查询条件参数-->
+<#--        <#list fields as field>-->
+<#--        <#if field.is_pub == "0" && !field.type?contains("DATE")>-->
+<#--        String ${field.name!''} = queryBean.getArgValue("${field.name!''}"); //${field.remark!''}-->
+<#--        </#if>-->
+<#--        </#list>-->
 
         // 分页查询Sql
         StringBuffer querySql = new StringBuffer();
@@ -275,8 +252,9 @@ public class ${className} extends DataServiceTemplateJavaParse {
         querySql.append(" and <#list fields as field><#if field.is_del == "0">${field.name!''}</#if></#list> = '0' ");
 
         // 查询条件
+        <#--只要是日期类型，并且不为公共参数，就接收开始时间和结束时间的参数-->
         <#list fields as field>
-        <#if field.type?contains("DATE")>
+        <#if field.type?contains("DATE") && field.is_pub == "1">
         // 查询条件-${field.remark!''}开始时间
         if(StringUtils.isNotBlank(${field.name!''}_start)){
             querySql.append(" AND ${field.name!''} >= ?");
@@ -289,9 +267,10 @@ public class ${className} extends DataServiceTemplateJavaParse {
         }
         </#if>
         </#list>
+        <#--接收普通参数的查询条件参数-->
         <#list fields as field>
         <#if field.is_key == "1" && field.is_del == "1" && field.is_pub == "1" && !field.type?contains("DATE")>
-        <#--精准查询-->
+        <#--普通参数精准查询-->
         <#if field.name?contains("id") || field.name?contains("status") || field.name?contains("key")>
         // 查询条件-${field.remark!''}
         if(StringUtils.isNotBlank(${field.name!''})){
@@ -299,7 +278,7 @@ public class ${className} extends DataServiceTemplateJavaParse {
             paramList.add(${field.name!''});
         }
         <#else>
-        <#--模糊匹配-->
+        <#--普通参数模糊匹配-->
         // 查询条件-${field.remark!''}
         if(StringUtils.isNotBlank(${field.name!''})){
             querySql.append(" AND ${field.name!''} LIKE ?");
@@ -308,15 +287,26 @@ public class ${className} extends DataServiceTemplateJavaParse {
         </#if>
         </#if>
         </#list>
-        <#list fields as field>
-        <#if field.is_key == "1" && field.is_del == "1" && field.is_pub == "0" && !field.type?contains("DATE")>
-        // 查询条件-${field.remark!''}
-        if(StringUtils.isNotBlank(${field.name!''})){
-            querySql.append(" AND ${field.name!''} = ?");
-            paramList.add(${field.name!''});
-        }
-        </#if>
-        </#list>
+        <#--接收公共参数的查询条件参数-->
+<#--        <#list fields as field>-->
+<#--        <#if field.is_key == "1" && field.is_del == "1" && field.is_pub == "0" && !field.type?contains("modified") && !field.type?contains("DATE")>-->
+<#--        &lt;#&ndash;公共参数精准查询&ndash;&gt;-->
+<#--        <#if !field.name?contains("name")>-->
+<#--        // 查询条件-${field.remark!''}-->
+<#--        if(StringUtils.isNotBlank(${field.name!''})){-->
+<#--            querySql.append(" AND ${field.name!''} = ?");-->
+<#--            paramList.add(${field.name!''});-->
+<#--        }-->
+<#--        <#else>-->
+<#--        &lt;#&ndash;公共参数模糊匹配&ndash;&gt;-->
+<#--        // 查询条件-${field.remark!''}-->
+<#--        if(StringUtils.isNotBlank(${field.name!''})){-->
+<#--            querySql.append(" AND ${field.name!''} LIKE ?");-->
+<#--            paramList.add("%"+${field.name!''}+"%");-->
+<#--        }-->
+<#--        </#if>-->
+<#--        </#if>-->
+<#--        </#list>-->
 
         // 结果总数统计sql
         StringBuffer countSql = new StringBuffer();
@@ -377,7 +367,7 @@ public class ${className} extends DataServiceTemplateJavaParse {
      * @Author ${author}
      * @Version ${version}
      * @Date ${date}
-     * @return 返回数据修改是否成功的提示信息
+     * @return 返回操作数据库是否成功的提示信息
      */
     private JSONObject updateMethod(QueryBean queryBean, IBaseDao baseDao){
         // 返回结果
@@ -441,7 +431,7 @@ public class ${className} extends DataServiceTemplateJavaParse {
 
         try{
             // 打印待执行SQL日志
-            PubLog.logOptInfo(LoggerLevel.INFO, "修改操作SQL="+querySql.toString(), false);
+            PubLog.logOptInfo(LoggerLevel.INFO, "修改操作SQL="+updateSql.toString(), false);
             PubLog.logOptInfo(LoggerLevel.INFO, "修改查询Params="+paramList.toString(), false);
 
             // 执行sql
@@ -484,14 +474,14 @@ public class ${className} extends DataServiceTemplateJavaParse {
      * @Author ${author}
      * @Version ${version}
      * @Date ${date}
-     * @return 返回查询到的数据详情信息
+     * @return 操作数据库执行查询操作，直接返回数据详情查询结果到响应对象
      */
     public void selectDetail(QueryBean queryBean, IBaseDao baseDao, IBaseDao pfDao, ResponseResult result) {
         // 定义详情查询结果对象
         List<Map<String, Object>> resultList = new ArrayList<>();
         Map<String,Object> resultMap = new HashMap<>();
 
-        // 获取详情的ID参数
+        // 注入要获取详情数据的ID参数
         List<Object> paramList = new ArrayList<>();
         <#list fields as field>
         <#if field.is_key == "0">
@@ -516,7 +506,7 @@ public class ${className} extends DataServiceTemplateJavaParse {
 
         try{
             // 打印待执行SQL日志
-            PubLog.logOptInfo(LoggerLevel.INFO, "查询想清楚SQL="+querySql.toString(), false);
+            PubLog.logOptInfo(LoggerLevel.INFO, "查询详情SQL="+querySql.toString(), false);
             PubLog.logOptInfo(LoggerLevel.INFO, "查询详情Params="+paramList.toString(), false);
 
             // 执行查询详情sql
@@ -567,7 +557,7 @@ public class ${className} extends DataServiceTemplateJavaParse {
      * @Author ${author}
      * @Version ${version}
      * @Date ${date}
-     * @return 返回批量新增数据的提示信息
+     * @return 返回操作数据库是否成功的提示信息
      */
     private JSONObject batchInsertMethod(QueryBean queryBean, IBaseDao baseDao, IBaseDao pfDao) {
         // 定义返回结果
@@ -663,7 +653,7 @@ public class ${className} extends DataServiceTemplateJavaParse {
             PubLog.logOptInfo(LoggerLevel.INFO, "批量新增Params="+paramList.toString(), false);
 
             // 执行新增操作
-            int[] changeLineArr = baseDao.executeSqlUpdateBatch(batchInsertSql.toString(), paramsList);
+            int[] changeLineArr = baseDao.executeSqlUpdateBatch(batchInsertSql.toString(), paramList);
 
             // 设置返回结果
             if(changeLineArr.length > 0){
@@ -702,7 +692,7 @@ public class ${className} extends DataServiceTemplateJavaParse {
      * @Author ${author}
      * @Version ${version}
      * @Datte ${date}
-     * @return 返回非分页列表数据
+     * @return 操作数据库执行查询操作，直接返回非分页查询结果到响应对象
      */
     public void selectNoPageList(QueryBean queryBean, IBaseDao baseDao, IBaseDao pfDao, ResponseResult result) {
         // 定义非分页查询结果对象
@@ -710,19 +700,16 @@ public class ${className} extends DataServiceTemplateJavaParse {
 
         // 获取查询条件参数
         List<Object> paramList = new ArrayList<>();
+        <#--只要是日期类型，并且不为公共参数，就接收开始时间和结束时间的参数-->
         <#list fields as field>
-        <#if field.type?contains("DATE")>
+        <#if field.type?contains("DATE") && field.is_pub == "1">
         String ${field.name!''}_start = queryBean.getArgValue("${field.name!''}_start"); //${field.remark!''}开始时间
         String ${field.name!''}_end = queryBean.getArgValue("${field.name!''}_end"); //${field.remark!''}结束时间
         </#if>
         </#list>
+        <#--接收普通参数的查询条件参数-->
         <#list fields as field>
         <#if field.is_key == "1" && field.is_del == "1" && field.is_pub == "1" && !field.type?contains("DATE")>
-        String ${field.name!''} = queryBean.getArgValue("${field.name!''}"); //${field.remark!''}
-        </#if>
-        </#list>
-        <#list fields as field>
-        <#if field.is_key == "1" && field.is_del == "1" && field.is_pub == "0" && !field.type?contains("DATE")>
         String ${field.name!''} = queryBean.getArgValue("${field.name!''}"); //${field.remark!''}
         </#if>
         </#list>
@@ -741,8 +728,9 @@ public class ${className} extends DataServiceTemplateJavaParse {
         querySql.append(" and <#list fields as field><#if field.is_del == "0">${field.name!''}</#if></#list> = '0' ");
 
         // 查询条件
+        <#--只要是日期类型，并且不为公共参数，就接收开始时间和结束时间的参数-->
         <#list fields as field>
-        <#if field.type?contains("DATE")>
+        <#if field.type?contains("DATE") && field.is_pub == "1">
         // 查询条件-${field.remark!''}开始时间
         if(StringUtils.isNotBlank(${field.name!''}_start)){
             querySql.append(" AND ${field.name!''} >= ?");
@@ -755,9 +743,10 @@ public class ${className} extends DataServiceTemplateJavaParse {
         }
         </#if>
         </#list>
+        <#--接收普通参数的查询条件参数-->
         <#list fields as field>
         <#if field.is_key == "1" && field.is_del == "1" && field.is_pub == "1" && !field.type?contains("DATE")>
-        <#--精准查询-->
+        <#--普通参数精准查询-->
         <#if field.name?contains("id") || field.name?contains("status") || field.name?contains("key")>
         // 查询条件-${field.remark!''}
         if(StringUtils.isNotBlank(${field.name!''})){
@@ -765,22 +754,13 @@ public class ${className} extends DataServiceTemplateJavaParse {
             paramList.add(${field.name!''});
         }
         <#else>
-        <#--模糊匹配-->
+        <#--普通参数模糊匹配-->
         // 查询条件-${field.remark!''}
         if(StringUtils.isNotBlank(${field.name!''})){
             querySql.append(" AND ${field.name!''} LIKE ?");
             paramList.add("%"+${field.name!''}+"%");
         }
         </#if>
-        </#if>
-        </#list>
-        <#list fields as field>
-        <#if field.is_key == "1" && field.is_del == "1" && field.is_pub == "0" && !field.type?contains("DATE")>
-        // 查询条件-${field.remark!''}
-        if(StringUtils.isNotBlank(${field.name!''})){
-            querySql.append(" AND ${field.name!''} = ?");
-            paramList.add(${field.name!''});
-        }
         </#if>
         </#list>
 
@@ -819,7 +799,7 @@ public class ${className} extends DataServiceTemplateJavaParse {
         JSONObject resultJson = new JSONObject();
 
         // 自定义数据操作
-        resultJson = this.customMethod(queryBean, baseDao, pfDao, result);
+        resultJson = this.customMethod(queryBean, baseDao, pfDao);
 
         // 设置返回结果
         result.setFormatType(FormatType.MESSAGE);
@@ -834,7 +814,7 @@ public class ${className} extends DataServiceTemplateJavaParse {
      * @Datte ${date}
      * @return 返回自定义操作信息
      */
-    public void customMethod(QueryBean queryBean, IBaseDao baseDao, IBaseDao pfDao, ResponseResult result) {
+    public JSONObject customMethod(QueryBean queryBean, IBaseDao baseDao, IBaseDao pfDao) {
         // 定义返回结果
         JSONObject resultJson = new JSONObject();
 

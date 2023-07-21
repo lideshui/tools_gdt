@@ -61,7 +61,7 @@
             isIndeterminate: true,
             isGenerateDisabled: false,
             checkedItems: '返回值设置',
-            items: ['返回值设置', '其他常用方法', '常用类型转换方法', '函数式编程方法'],
+            items: ['返回值设置', '其他常用方法', '常用类型转换方法', '函数式编程方法', 'Excel上传和下载方法','PDF基于模板生成和下载方法'],
             dataSourceValue: '',
             dataSourceOptions: [],
             tableValue: '',
@@ -154,12 +154,34 @@
                         "HttpServletResponse response = queryBean.getResponse();\n" +
                         "\n" +
                         "//获取长参数时取消长度限制\n" +
-                        "String content = bean.getArgValue(\"content\",false);"
+                        "String content = bean.getArgValue(\"content\",false);\n" +
+                        "\n" +
+                        "//处理非空\n" +
+                        "String id = Optional.ofNullable(str1).orElse(\"默认值\");"
                 }
                 if(this.checkedItems == "常用类型转换方法"){
-                    this.code = "//转化序列化字符串\n" +
+                    this.code = "//把序列化字符串转化为Map\n" +
+                        "Map<String, Object> map = new Gson().fromJson(str, Map.class);\t\n" +
+                        "\n" +
+                        "//转化序列化字符串\n" +
                         "String sonData= queryBean.getNotLimitLenArgValue(\"sonData\");\n" +
-                        "String escapeJson = StringEscapeUtils.escapeJson(sonData);"
+                        "String escapeJson = StringEscapeUtils.escapeJson(sonData);\n" +
+                        "\n" +
+                        "//集合与数组之间的转换：\n" +
+                        "//数组转换为List：\n" +
+                        "List<Integer> list = Arrays.asList(array);\n" +
+                        "List转换为数组：\n" +
+                        "Integer[] array = list.toArray(new Integer[0]);\n" +
+                        "\n" +
+                        "//JSON相关的转换：\n" +
+                        "//JSONObject转换为Java对象：\n" +
+                        "MyObject obj = jsonObject.toJavaObject(MyObject.class);\n" +
+                        "//Java对象转换为JSONObject：\n" +
+                        "JSONObject jsonObject = (JSONObject) JSON.toJSON(obj);\n" +
+                        "//JSONArray转换为List：\n" +
+                        "List<MyObject> list = jsonArray.toJavaList(MyObject.class);\n" +
+                        "//List转换为JSONArray：\n" +
+                        "JSONArray jsonArray = (JSONArray) JSON.toJSON(list);"
                 }
                 if(this.checkedItems == "函数式编程方法"){
                     this.code = "//根据index进行排序\n" +
@@ -167,13 +189,419 @@
                         "    Comparator.comparingInt(\n" +
                         "        map->Integer.valueOf(String.valueOf(map.get(\"index\"))))).collect(Collectors.toList());\t\n" +
                         "\n" +
+                        "\n" +
+                        "//对流中的元素按照年龄进行降序排序，并且要求不能有重复的元素。\n" +
+                        "List<Author> authors = getAuthors();\n" +
+                        "authors.stream()\n" +
+                        "  .distinct()\n" +
+                        "  .sorted((o1, o2) -> o2.getAge()-o1.getAge())\n" +
+                        "  .forEach(author -> System.out.println(author.getAge()));\n" +
+                        "\n" +
+                        "\n" +
                         "//遍历Map\n" +
                         "sortMap.forEach((k,v)->{\t\n" +
                         "    if(k.equals(String.valueOf(data.get(\"bzbh\")))){\n" +
                         "        data.put(\"index\", v);\n" +
                         "        return;\n" +
                         "    }\n" +
-                        "});"
+                        "});\n" +
+                        "\n" +
+                        "\n" +
+                        "//过滤\n" +
+                        "List<Author> authors = getAuthors();\n" +
+                        "authors.stream()\n" +
+                        "  .filter(author -> author.getName().length()>1)\n" +
+                        "  .forEach(author -> System.out.println(author.getName()));\n" +
+                        "\n" +
+                        "\n" +
+                        "//去重\n" +
+                        "List<Author> authors = getAuthors();\n" +
+                        "authors.stream()\n" +
+                        "  .distinct()\n" +
+                        "  .forEach(author -> System.out.println(author.getName()));\n" +
+                        "\n" +
+                        "\n" +
+                        "//跳过流中的前n个元素，返回剩下的元素\n" +
+                        "//打印除了年龄最大的作家外的其他作家，要求不能有重复元素，并且按照年龄降序排序。\n" +
+                        "List<Author> authors = getAuthors();\n" +
+                        "authors.stream()\n" +
+                        "  .distinct()\n" +
+                        "  .sorted()\n" +
+                        "  .skip(1)\n" +
+                        "  .forEach(author -> System.out.println(author.getName()));\n" +
+                        "\n" +
+                        "\n" +
+                        "//map只能把一个对象转换成另一个对象来作为流中的元素。而flatMap可以把一个对象转换成多个对象作为流中的元素。\n" +
+                        "//打印所有书籍的名字。要求对重复的元素进行去重。\n" +
+                        "List<Author> authors = getAuthors();\n" +
+                        "authors.stream()\n" +
+                        "  .flatMap(author -> author.getBooks().stream())\n" +
+                        "  .distinct()\n" +
+                        "  .forEach(book -> System.out.println(book.getName()));\n" +
+                        "\n" +
+                        "\n" +
+                        "// 计算\n" +
+                        "//打印这些作家的所出书籍的数目，注意删除重复元素。\n" +
+                        "List<Author> authors = getAuthors();\n" +
+                        "long count = authors.stream()\n" +
+                        "  .flatMap(author -> author.getBooks().stream())\n" +
+                        "  .distinct()\n" +
+                        "  .count();\n" +
+                        "System.out.println(count);\n" +
+                        "\n" +
+                        "//分别获取这些作家的所出书籍的最高分和最低分并打印。\n" +
+                        "//Stream<Author>  -> Stream<Book> ->Stream<Integer>  ->求值\n" +
+                        "\n" +
+                        "List<Author> authors = getAuthors();\n" +
+                        "Optional<Integer> max = authors.stream()\n" +
+                        "  .flatMap(author -> author.getBooks().stream())\n" +
+                        "  .map(book -> book.getScore())\n" +
+                        "  .max((score1, score2) -> score1 - score2);\n" +
+                        "\n" +
+                        "Optional<Integer> min = authors.stream()\n" +
+                        "  .flatMap(author -> author.getBooks().stream())\n" +
+                        "  .map(book -> book.getScore())\n" +
+                        "  .min((score1, score2) -> score1 - score2);\n" +
+                        "System.out.println(max.get());\n" +
+                        "System.out.println(min.get());\n" +
+                        "\n" +
+                        "\n" +
+                        "//转换收集\n" +
+                        "//        获取一个Map集合，map的key为作者名，value为List<Book>\n" +
+                        "List<Author> authors = getAuthors();\n" +
+                        "\n" +
+                        "Map<String, List<Book>> map = authors.stream()\n" +
+                        "  .distinct()\n" +
+                        "  .collect(Collectors.toMap(author -> author.getName(), author -> author.getBooks()));\n" +
+                        "\n" +
+                        "System.out.println(map);\n" +
+                        "\n" +
+                        "//        获取一个存放所有作者名字的List集合。\n" +
+                        "List<Author> authors = getAuthors();\n" +
+                        "List<String> nameList = authors.stream()\n" +
+                        "  .map(author -> author.getName())\n" +
+                        "  .collect(Collectors.toList());\n" +
+                        "System.out.println(nameList);\n" +
+                        "\n" +
+                        "\n" +
+                        "//查找与匹配\n" +
+                        "//        判断是否有年龄在29以上的作家\n" +
+                        "List<Author> authors = getAuthors();\n" +
+                        "boolean flag = authors.stream()\n" +
+                        "  .anyMatch(author -> author.getAge() > 29);\n" +
+                        "System.out.println(flag);\n" +
+                        "\n" +
+                        "//        判断是否所有的作家都是成年人\n" +
+                        "List<Author> authors = getAuthors();\n" +
+                        "boolean flag = authors.stream()\n" +
+                        "  .allMatch(author -> author.getAge() >= 18);\n" +
+                        "System.out.println(flag);\n" +
+                        "\n" +
+                        "//        判断作家是否都没有超过100岁的。\n" +
+                        "List<Author> authors = getAuthors();\n" +
+                        "\n" +
+                        "boolean b = authors.stream()\n" +
+                        "  .noneMatch(author -> author.getAge() > 100);\n" +
+                        "\n" +
+                        "System.out.println(b);\n" +
+                        "\n" +
+                        "//        获取一个年龄最小的作家，并输出他的姓名。\n" +
+                        "List<Author> authors = getAuthors();\n" +
+                        "Optional<Author> first = authors.stream()\n" +
+                        "  .sorted((o1, o2) -> o1.getAge() - o2.getAge())\n" +
+                        "  .findFirst();\n" +
+                        "\n" +
+                        "first.ifPresent(author -> System.out.println(author.getName()));\n" +
+                        "\n" +
+                        "//        使用reduce求所有作者中年龄的最大值\n" +
+                        "List<Author> authors = getAuthors();\n" +
+                        "Integer max = authors.stream()\n" +
+                        "  .map(author -> author.getAge())\n" +
+                        "  .reduce(Integer.MIN_VALUE, (result, element) -> result < element ? element : result);\n" +
+                        "\n" +
+                        "System.out.println(max);"
+                }
+                if(this.checkedItems == "Excel上传和下载方法"){
+                    this.code = "\n" +
+                        "    /**\n" +
+                        "     * @Description 接口方法:获取上传Excel中的数据\n" +
+                        "     */\n" +
+                        "    public void uploadStudentExcel(BackEndDataBean backEndDataBean, IConfigData configData, ResponseResult result,\n" +
+                        "            QueryBean queryBean, IBaseDao baseDao, IBaseDao pfDao) {\n" +
+                        "\t\t// 设置接口返回结果\n" +
+                        "\t\tJSONObject resultObject = this.getStudentInfo(queryBean, baseDao, pfDao);\n" +
+                        "\t\t\n" +
+                        "\t\t// 设置接口返回结果\n" +
+                        "\t\tresult.setFormatType(FormatType.MESSAGE);\n" +
+                        "\t\tresult.setMessage(resultObject.toJSONString());\t\n" +
+                        "\t}\n" +
+                        "\n" +
+                        "    \n" +
+                        "    /**\n" +
+                        "     * @Description 获取Excel信息\n" +
+                        "     */\n" +
+                        "    private JSONObject getStudentInfo(QueryBean bean, IBaseDao baseDao, IBaseDao platformDao) {\n" +
+                        "\n" +
+                        "    \tJSONObject result = new JSONObject();\n" +
+                        "      InputStream in = null;\n" +
+                        "      FileItem fileitem = null;\n" +
+                        "      List<String> names = new ArrayList<>();\n" +
+                        "\n" +
+                        "      try {\n" +
+                        "        // 创建一个工厂\n" +
+                        "        FileItemFactory factory = new DiskFileItemFactory();\n" +
+                        "        // 创建一个工具\n" +
+                        "        ServletFileUpload upload = new ServletFileUpload(factory);\n" +
+                        "        upload.setHeaderEncoding(\"UTF-8\");\n" +
+                        "        List<FileItem> items = upload.parseRequest(bean.getRequest());\n" +
+                        "        Iterator<FileItem> itr = items.iterator();\n" +
+                        "        while (itr.hasNext()) {\n" +
+                        "          // FileItem类用来封装单个表单字段元素的数据\n" +
+                        "          FileItem item = itr.next();\n" +
+                        "\n" +
+                        "          if (!item.isFormField()) {\n" +
+                        "            fileitem = item;\n" +
+                        "          }\n" +
+                        "        }\n" +
+                        "        if (fileitem != null) {\n" +
+                        "          in = new BufferedInputStream(fileitem.getInputStream());\n" +
+                        "          Workbook workbook = WorkbookFactory.create(in);\n" +
+                        "          Sheet hs = workbook.getSheetAt(0);\n" +
+                        "\n" +
+                        "          // 获取Sheet的第一个行号和最后一个行号\n" +
+                        "          int last = hs.getLastRowNum();\n" +
+                        "          int first = hs.getFirstRowNum() + 1;\n" +
+                        "\n" +
+                        "          // 遍历获取单元格里的信息\n" +
+                        "          // 注：row为行 cell为列\n" +
+                        "          for (int i = first; i <= last; i++) {\n" +
+                        "            Row row = hs.getRow(i);\n" +
+                        "            // 单位名称\n" +
+                        "            Cell cell1 = row.getCell(1);\n" +
+                        "            // 姓名\n" +
+                        "            Cell cell2 = row.getCell(2);\n" +
+                        "            // 职务\n" +
+                        "            Cell cell3 = row.getCell(3);\n" +
+                        "\n" +
+                        "            // 校验表格数据\n" +
+                        "            if(ObjectUtil.isEmpty(cell1) || ObjectUtil.isEmpty(cell2) || ObjectUtil.isEmpty(cell3) || StringUtils.isBlank(String.valueOf(cell1)) || StringUtils.isBlank(String.valueOf(cell2)) || StringUtils.isBlank(String.valueOf(cell3))){\n" +
+                        "              result.put(\"result\", \"error\");\n" +
+                        "              result.put(\"message\", \"上传失败，请检查表格第\"+i+\"行附近!\");\n" +
+                        "              return result;\n" +
+                        "            }\n" +
+                        "\n" +
+                        "            // 设置姓名列表\n" +
+                        "            names.add(String.valueOf(cell2));\n" +
+                        "          }\n" +
+                        "\n" +
+                        "        }       \n" +
+                        "        // 设置返回数据\n" +
+                        "        result.put(\"result\", \"success\");\n" +
+                        "        result.put(\"message\", \"上传成功!\");\n" +
+                        "        result.put(\"student_list\", String.join(\", \", names));\t\n" +
+                        "        result.put(\"train_people_number\", names.size());\t\n" +
+                        "          } catch (Exception e) {\n" +
+                        "        result.put(\"result\", \"error\");\n" +
+                        "              result.put(\"message\", \"上传失败!\");\n" +
+                        "        PubLog.logOptInfo(LoggerLevel.ERROR, PubLog.getExceptionDetail(e), false);\n" +
+                        "      } finally {\n" +
+                        "        try {\n" +
+                        "          if (in != null) {\n" +
+                        "            in.close();\n" +
+                        "          }\n" +
+                        "        } catch (Exception e2) {\n" +
+                        "          PubLog.logOptInfo(LoggerLevel.ERROR, PubLog.getExceptionDetail(e2), false);\n" +
+                        "        } finally {\n" +
+                        "          in = null;\n" +
+                        "        }\n" +
+                        "      }\n" +
+                        "\t\t\treturn result;\n" +
+                        "    } \n" +
+                        "\n" +
+                        "\n" +
+                        "\t\t/**\n" +
+                        "     * @Description 接口方法:下载Excel上传模板\n" +
+                        "     * @return 返回Excel模板\n" +
+                        "     */\n" +
+                        "    public void downloadStudentExcel(BackEndDataBean backEndDataBean, IConfigData configData, ResponseResult result,\n" +
+                        "            QueryBean queryBean, IBaseDao baseDao, IBaseDao pfDao) throws Exception  {\n" +
+                        "    \t// 获取响应对象\n" +
+                        "\t\tHttpServletResponse response = queryBean.getResponse();\n" +
+                        "\t\t\n" +
+                        "\t\t// 文件名称\n" +
+                        "\t\tString fillName = URLEncoder.encode(\"学员上传模板\", \"UTF-8\");\n" +
+                        "\t\t\n" +
+                        "        // 设置响应头信息\n" +
+                        "        response.setContentType(\"application/vnd.ms-excel\");\n" +
+                        "        response.setHeader(\"Content-Disposition\", \"attachment; filename=\"+fillName+\".xlsx\");\n" +
+                        "        \n" +
+                        "        // 创建一个Excel工作簿对象\n" +
+                        "        XSSFWorkbook workbook = new XSSFWorkbook();\n" +
+                        "\n" +
+                        "        // 创建一个工作表对象\n" +
+                        "        Sheet sheet = workbook.createSheet(\"Sheet1\");\n" +
+                        "        \n" +
+                        "        // 设置表头\n" +
+                        "        Row header = sheet.createRow(0);\n" +
+                        "        List<String> titleList = new ArrayList<>();\n" +
+                        "        titleList.add(\"序号\");\n" +
+                        "        titleList.add(\"单位\");\n" +
+                        "        titleList.add(\"姓名\");\n" +
+                        "        titleList.add(\"职务\");\n" +
+                        "        IntStream.range(0, titleList.size()).forEach(i->{\n" +
+                        "        \tCell cell = header.createCell(i);\n" +
+                        "            cell.setCellValue(titleList.get(i));\n" +
+                        "        });\n" +
+                        "\t\t\n" +
+                        "        // 将生成的Excel文件发送给客户端\n" +
+                        "        OutputStream os = response.getOutputStream();\n" +
+                        "        workbook.write(os);\n" +
+                        "        os.flush();\n" +
+                        "        os.close();\n" +
+                        "\t}"
+                }
+                if(this.checkedItems == "PDF基于模板生成和下载方法") {
+                    this.code = "package com.sgitg.hggl.workreport;\n" +
+                        "\n" +
+                        "import java.io.ByteArrayOutputStream;\n" +
+                        "import java.io.OutputStream;\n" +
+                        "import java.io.StringWriter;\n" +
+                        "import java.lang.reflect.Field;\n" +
+                        "import java.net.URLEncoder;\n" +
+                        "import java.text.ParseException;\n" +
+                        "import java.text.SimpleDateFormat;\n" +
+                        "import java.time.LocalDate;\n" +
+                        "import java.time.LocalDateTime;\n" +
+                        "import java.time.format.DateTimeFormatter;\n" +
+                        "import java.util.ArrayList;\n" +
+                        "import java.util.Arrays;\n" +
+                        "import java.util.Comparator;\n" +
+                        "import java.util.HashMap;\n" +
+                        "import java.util.HashSet;\n" +
+                        "import java.util.Iterator;\n" +
+                        "import java.util.List;\n" +
+                        "import java.util.Locale;\n" +
+                        "import java.util.Map;\n" +
+                        "import java.util.Optional;\n" +
+                        "import java.util.Set;\n" +
+                        "import java.util.stream.Collectors;\n" +
+                        "\n" +
+                        "import javax.servlet.http.HttpServletResponse;\n" +
+                        "\n" +
+                        "import org.apache.commons.collections.CollectionUtils;\n" +
+                        "import org.apache.commons.lang3.StringUtils;\n" +
+                        "import org.springframework.util.ObjectUtils;\n" +
+                        "import org.xhtmlrenderer.pdf.ITextRenderer;\n" +
+                        "\n" +
+                        "import com.alibaba.fastjson.JSON;\n" +
+                        "import com.alibaba.fastjson.JSONArray;\n" +
+                        "import com.alibaba.fastjson.JSONObject;\n" +
+                        "import com.google.gson.Gson;\n" +
+                        "import com.lowagie.text.pdf.BaseFont;\n" +
+                        "import com.sgitg.developer.annotation.data.QueryBean;\n" +
+                        "import com.sgitg.developer.annotation.data.ResponseResult;\n" +
+                        "import com.sgitg.developer.annotation.data.ResponseResultOpe.FormatType;\n" +
+                        "import com.sgitg.developer.backend.javaparse.imp.DataServiceTemplateJavaParse;\n" +
+                        "import com.sgitg.developer.backend.javaparse.imp.MultipleMethodJavaParse;\n" +
+                        "import com.sgitg.developer.backend.sqlparse.BackEndDataBean;\n" +
+                        "import com.sgitg.developer.configure.bean.IConfigData;\n" +
+                        "import com.sgitg.developer.dao.IBaseDao;\n" +
+                        "import com.sgitg.developer.dao.holder.DynamicDataSourceContextHolder;\n" +
+                        "import com.sgitg.developer.log.PubLog;\n" +
+                        "import com.sgitg.developer.log.util.LogConstant.LoggerLevel;\n" +
+                        "\n" +
+                        "import cn.hutool.core.util.ObjectUtil;\n" +
+                        "import cn.hutool.jdk6.core.lang.UUID;\n" +
+                        "import freemarker.template.Configuration;\n" +
+                        "import freemarker.template.Template;\n" +
+                        "\n" +
+                        "@SuppressWarnings(\"unchecked\")\n" +
+                        "public class BaseData extends DataServiceTemplateJavaParse {\n" +
+                        "\n" +
+                        "\t@Override\n" +
+                        "\tpublic void defaultMethod(BackEndDataBean backEndDataBean, IConfigData configData, ResponseResult result,\n" +
+                        "\t\t\tQueryBean queryBean, IBaseDao baseDao, IBaseDao pfDao) {\n" +
+                        "\t}\n" +
+                        "\n" +
+                        "\t/**\n" +
+                        "\t * 下载pdf文件\n" +
+                        "\t */\n" +
+                        "\tpublic void exportBaseData(BackEndDataBean backEndDataBean, IConfigData configData, ResponseResult result,\n" +
+                        "\t\t\tQueryBean queryBean, IBaseDao baseDao, IBaseDao pfDao) throws Exception {\n" +
+                        "\t\tByteArrayOutputStream baos = null;\n" +
+                        "\t\tOutputStream out = null;\n" +
+                        "\t\tHttpServletResponse response = queryBean.getResponse();\n" +
+                        "\t\ttry {\t\t\n" +
+                        "\t\t\t// 从数据库中查询填报的数据\n" +
+                        "\t\t\tString id = queryBean.getArgValue(\"id\");\n" +
+                        "\t\n" +
+                        "\t\t\tList<Map<String,Object>> fillData = this.getFillData(queryBean, baseDao, id);\n" +
+                        "\t\t\tHashMap<String, Object> pdfMap = new HashMap<>();\n" +
+                        "\t\t\tpdfMap.put(\"data\", fillData);\n" +
+                        "\t\t\t// 将数据设置到pdf模板那种\n" +
+                        "\t\t\tbaos = this.createPDF(pdfMap, \"baseData.ftl\");\n" +
+                        "\t\t\t// 设置响应消息头，告诉浏览器当前响应是需要下载的文件\n" +
+                        "\t\t\tresponse.setHeader(\"Access-Control-Expose-Headers\", \"Content-Disposition\");\n" +
+                        "\t\t    response.setCharacterEncoding(\"utf-8\");\n" +
+                        "\t\t\tresponse.setContentType(\"application/x-msdownload\");\n" +
+                        "\t\t\t// 告诉浏览器，当前响应数据要求用户干预保存到文件中，以及文件名是什么 如果文件名有中文，必须URL编码\n" +
+                        "\t\t\tString fileName = URLEncoder.encode(\"合规基础数据.pdf\", \"UTF-8\");\n" +
+                        "\t\t\tresponse.setHeader(\"Content-Disposition\", \"attachment;filename=\" + fileName);\n" +
+                        "\t\t\tout = response.getOutputStream();\n" +
+                        "\t\t\tresponse.reset();\n" +
+                        "\t\t\tbaos.writeTo(out);\n" +
+                        "\t\t\tbaos.close();\n" +
+                        "\t\t} catch (Exception e) {\n" +
+                        "\t\t\te.printStackTrace();\n" +
+                        "\t\t\tthrow new Exception(\"导出失败：\" + e.getMessage());\n" +
+                        "\t\t} finally {\n" +
+                        "\t\t\tif (baos != null) {\n" +
+                        "\t\t\t\tbaos.close();\n" +
+                        "\t\t\t}\n" +
+                        "\t\t\tif (out != null) {\n" +
+                        "\t\t\t\tout.close();\n" +
+                        "\t\t\t}\n" +
+                        "\t\t}\n" +
+                        "\t}\n" +
+                        "\n" +
+                        "\t\n" +
+                        "\t/**\n" +
+                        "\t * 通过模板导出pdf文件       \n" +
+                        "\t */\n" +
+                        "\tprivate ByteArrayOutputStream createPDF(Map<String, Object> data, String templateFileName) throws Exception {\n" +
+                        "\t\t// 创建一个FreeMarker实例, 负责管理FreeMarker模板的Configuration实例\n" +
+                        "\t\tConfiguration cfg = new Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);\n" +
+                        "\t\t// 指定FreeMarker模板文件的位置\n" +
+                        "\t\tcfg.setClassForTemplateLoading(this.getClass(), \"/\");\n" +
+                        "\t\tITextRenderer renderer = new ITextRenderer();\n" +
+                        "\t\tOutputStream out = new ByteArrayOutputStream();\n" +
+                        "\t\ttry {\n" +
+                        "\t\t\t// 设置 css中 的字体样式（暂时仅支持宋体和黑体） 必须，不然中文不显示\n" +
+                        "\t\t\trenderer.getFontResolver().addFont(\"/simsun.ttc\", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);\n" +
+                        "\t\t\t// 设置模板的编码格式\n" +
+                        "\t\t\tcfg.setEncoding(Locale.CHINA, \"UTF-8\");\n" +
+                        "\t\t\t// 获取模板文件\n" +
+                        "\t\t\tTemplate template = cfg.getTemplate(templateFileName, \"UTF-8\");\n" +
+                        "\t\t\tStringWriter writer = new StringWriter();\n" +
+                        "\t\t\t// 将数据输出到html中\n" +
+                        "\t\t\ttemplate.process(data, writer);\n" +
+                        "\t\t\twriter.flush();\n" +
+                        "\t\t\tString html = writer.toString();\n" +
+                        "\t\t\t// 把html代码传入渲染器中\n" +
+                        "\t\t\trenderer.setDocumentFromString(html);\n" +
+                        "\t\t\trenderer.layout();\n" +
+                        "\t\t\trenderer.createPDF(out, false);\n" +
+                        "\t\t\trenderer.finishPDF();\n" +
+                        "\t\t\tout.flush();\n" +
+                        "\t\t\treturn (ByteArrayOutputStream) out;\n" +
+                        "\t\t} finally {\n" +
+                        "\t\t\tif (out != null) {\n" +
+                        "\t\t\t\tout.close();\n" +
+                        "\t\t\t}\n" +
+                        "\t\t}\n" +
+                        "\t}\n" +
+                        "\t\n" +
+                        "}"
                 }
                 this.showCodeBlock = true;
                 this.$nextTick(() => {
